@@ -3,3 +3,4 @@
 # Shell scripts 
 *.sh
 
+/venv
