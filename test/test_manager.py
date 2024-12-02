@@ -2,6 +2,7 @@ import pytest
 from manager import OwnerPetManager
 
 
+
 @pytest.fixture
 def manager(tmp_path):
     return OwnerPetManager(filename=tmp_path / "test_kto_ma_co.txt")
@@ -23,6 +24,6 @@ def test_save_new_owner_pet_data_missing_pet(manager):
         manager.save_new_owner_pet_data("Jan", "")
 
 
-# def test_save_new_owner_pet_data_only_spaces(manager):
-#     with pytest.raises(ValueError, match="Both 'owner' and 'pet' must be provided."):
-#         manager.save_new_owner_pet_data("   ", "   ")
+def test_save_new_owner_pet_data_only_spaces(manager):
+    with pytest.raises(ValueError, match="Both 'owner' and 'pet' must be provided."):
+        manager.save_new_owner_pet_data("   ", "   ")
