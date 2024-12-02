@@ -21,3 +21,8 @@ def test_save_new_owner_pet_data_missing_owner(manager):
 def test_save_new_owner_pet_data_missing_pet(manager):
     with pytest.raises(ValueError, match="Both 'owner' and 'pet' must be provided."):
         manager.save_new_owner_pet_data("Jan", "")
+
+
+def test_save_new_owner_pet_data_only_spaces(manager):
+    with pytest.raises(ValueError, match="Both 'owner' and 'pet' must be provided."):
+        manager.save_new_owner_pet_data("   ", "   ")

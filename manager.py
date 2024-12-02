@@ -9,6 +9,9 @@ class OwnerPetManager:
         """
         Saves owner and pet data to a file with the current date.
         """
+        owner = owner.strip() if owner else ""
+        pet = pet.strip() if pet else ""
+
         if not owner or not pet:
             raise ValueError("Both 'owner' and 'pet' must be provided.")
 
