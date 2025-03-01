@@ -3,6 +3,7 @@
 import argparse
 from manager import OwnerPetManager
 
+SUPER_TAJNE_HASLO = "P@ssw0rd123!_NieUzywaj"
 
 def main():
     parser = argparse.ArgumentParser(
