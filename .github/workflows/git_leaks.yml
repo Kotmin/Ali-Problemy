@@ -1,0 +1,33 @@
+name: gitleaks
+on: [pull_request, push, workflow_dispatch]
+
+jobs:
+  scan:
+    name: gitleaks
+    runs-on: [self-hosted, Ubuntu]
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          
+      - name: Run Gitleaks
+        id: gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true 
+
+      - name: Check Gitleaks Results
+        if: steps.gitleaks.outcome == 'failure'
+        run: |
+          echo "Gitleaks wykrył sekrety! PR zostanie zablokowany."
+          exit 1
+
+      - name: Comment on PR
+        if: github.event_name == 'pull_request' && steps.gitleaks.outcome == 'failure'
+        uses: mshick/add-pr-comment@v2
+        with:
+          message: "🔒 Gitleaks wykrył sekrety w tym PR! Proszę sprawdzić logi i usunąć wrażliwe dane."
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+

@@ -1,0 +1,31 @@
+name: Debug Self-Hosted Runner
+on: [push, pull_request, workflow_dispatch]
+
+jobs:
+  debug-runner:
+    name: Check Self-Hosted Runner
+    runs-on: [self-hosted, Ubuntu]
+    steps:
+      - name: Print Runner Info
+        run: |
+          echo "✅ Self-hosted runner działa!"
+          uname -a
+          whoami
+
+      - name: Simulate Failure if Runner Stops
+        run: |
+          echo "ℹ️ Sprawdzam, czy runner jest aktywny..."
+          sleep 10  # Można wydłużyć, by symulować dłuższy test
+          echo "🛑 Runner przestał odpowiadać!" && exit 1
+        continue-on-error: true  # Pozwala nam przejść do kolejnego kroku
+
+      - name: Comment on PR if Runner Failed
+        if: failure() && github.event_name == 'pull_request'
+        uses: mshick/add-pr-comment@v2
+        with:
+          message: "⚠️ Self-hosted runner przestał działać! Sprawdź jego status w repozytorium."
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Log Failure Warning
+        if: failure()
+        run: echo "❌ Runner nie działa poprawnie. Sprawdź jego status!"
