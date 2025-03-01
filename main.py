@@ -3,9 +3,7 @@
 import argparse
 from manager import OwnerPetManager
 
-SUPER_TAJNE_HASLO_SECRET = "P@ssw0rd123!_NieUzywaj"
-GITHUB_TOKEN = "ghp_1234567890abcdefghijklmnopqrstuvwxyzABCDEF"
-DATABASE_URL = "postgresql://admin:SuperTajneHaslo123@db.example.com:5432/mydatabase"
+
 
 def main():
     parser = argparse.ArgumentParser(
