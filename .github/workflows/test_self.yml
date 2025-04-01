@@ -4,7 +4,7 @@ on: [push, pull_request, workflow_dispatch]
 jobs:
   debug-runner:
     name: Check Self-Hosted Runner
-    runs-on: [self-hosted, Ubuntu]
+    runs-on: [self-hosted, ubuntu-latest, Ubuntu]
     steps:
       - name: Print Runner Info
         run: |
@@ -17,7 +17,7 @@ jobs:
           echo "ℹ️ Sprawdzam, czy runner jest aktywny..."
           sleep 10  # Można wydłużyć, by symulować dłuższy test
           echo "🛑 Runner przestał odpowiadać!" && exit 1
-        continue-on-error: true  # Pozwala nam przejść do kolejnego kroku
+        continue-on-error: true # Pozwala nam przejść do kolejnego kroku
 
       - name: Comment on PR if Runner Failed
         if: failure() && github.event_name == 'pull_request'
