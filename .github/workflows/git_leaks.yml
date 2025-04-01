@@ -4,19 +4,21 @@ on: [pull_request, push, workflow_dispatch]
 jobs:
   scan:
     name: gitleaks
-    runs-on: [self-hosted, Ubuntu]
+    runs-on: [self-hosted, Ubuntu, ubuntu-latest]
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-          
+
       - name: Run Gitleaks
         id: gitleaks
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        continue-on-error: true 
+        continue-on-error: true
+        # with:
+        #   args: detect --report-format=json --report-path=gitleaks-output.json
 
       - name: Check Gitleaks Results
         if: steps.gitleaks.outcome == 'failure'
@@ -30,4 +32,3 @@ jobs:
         with:
           message: "🔒 Gitleaks wykrył sekrety w tym PR! Proszę sprawdzić logi i usunąć wrażliwe dane."
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-
