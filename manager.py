@@ -2,7 +2,7 @@ from datetime import datetime
 
 
 class OwnerPetManager:
-    def __init__(self, filename='Kto_ma_co.txt'):
+    def __init__(self, filename: str = 'Kto_ma_co.txt'):
         self.filename = filename
 
     def save_new_owner_pet_data(self, owner: str, pet: str):
