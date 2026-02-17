@@ -3,7 +3,21 @@ from datetime import date, datetime
 from pydantic import BaseModel, Field, field_validator
 
 
-class OwnershipRecordCreate(BaseModel):
+class _NameValidationMixin:
+    """Shared validator for owner_name and animal_name fields."""
+
+    @field_validator("owner_name", "animal_name", mode="before")
+    @classmethod
+    def strip_whitespace(cls, v: str | None) -> str | None:
+        if isinstance(v, str):
+            stripped = v.strip()
+            if not stripped:
+                raise ValueError("Must not be empty or whitespace-only")
+            return stripped
+        return v
+
+
+class OwnershipRecordCreate(_NameValidationMixin, BaseModel):
     owner_name: str = Field(
         ...,
         min_length=1,
@@ -24,31 +38,11 @@ class OwnershipRecordCreate(BaseModel):
         description="Date since the owner has the animal (YYYY-MM-DD)",
     )
 
-    @field_validator("owner_name", "animal_name", mode="before")
-    @classmethod
-    def strip_whitespace(cls, v: str) -> str:
-        if isinstance(v, str):
-            stripped = v.strip()
-            if not stripped:
-                raise ValueError("Must not be empty or whitespace-only")
-            return stripped
-        return v
 
-
-class OwnershipRecordUpdate(BaseModel):
+class OwnershipRecordUpdate(_NameValidationMixin, BaseModel):
     owner_name: str | None = Field(None, min_length=1, max_length=100)
     animal_name: str | None = Field(None, min_length=1, max_length=100)
     since_date: date | None = None
-
-    @field_validator("owner_name", "animal_name", mode="before")
-    @classmethod
-    def strip_whitespace(cls, v: str | None) -> str | None:
-        if isinstance(v, str):
-            stripped = v.strip()
-            if not stripped:
-                raise ValueError("Must not be empty or whitespace-only")
-            return stripped
-        return v
 
 
 class OwnershipRecordResponse(BaseModel):

@@ -15,6 +15,16 @@ from app.schemas import (
 router = APIRouter(prefix="/api/v1", tags=["ownership"])
 
 
+def _get_record_or_404(db: Session, record_id: int) -> OwnershipRecord:
+    """Fetch a record by ID or raise 404."""
+    record = db.query(OwnershipRecord).filter(
+        OwnershipRecord.id == record_id
+    ).first()
+    if not record:
+        raise HTTPException(status_code=404, detail="Record not found")
+    return record
+
+
 @router.post("/records", response_model=OwnershipRecordResponse, status_code=201)
 @limiter.limit(settings.rate_limit_write)
 def create_record(
@@ -59,12 +69,7 @@ def get_record(
     record_id: int,
     db: Session = Depends(get_db),
 ) -> OwnershipRecord:
-    record = db.query(OwnershipRecord).filter(
-        OwnershipRecord.id == record_id
-    ).first()
-    if not record:
-        raise HTTPException(status_code=404, detail="Record not found")
-    return record
+    return _get_record_or_404(db, record_id)
 
 
 @router.put("/records/{record_id}", response_model=OwnershipRecordResponse)
@@ -75,11 +80,7 @@ def update_record(
     payload: OwnershipRecordUpdate,
     db: Session = Depends(get_db),
 ) -> OwnershipRecord:
-    record = db.query(OwnershipRecord).filter(
-        OwnershipRecord.id == record_id
-    ).first()
-    if not record:
-        raise HTTPException(status_code=404, detail="Record not found")
+    record = _get_record_or_404(db, record_id)
     update_data = payload.model_dump(exclude_unset=True)
     for field, value in update_data.items():
         setattr(record, field, value)
@@ -95,11 +96,7 @@ def delete_record(
     record_id: int,
     db: Session = Depends(get_db),
 ) -> dict[str, str]:
-    record = db.query(OwnershipRecord).filter(
-        OwnershipRecord.id == record_id
-    ).first()
-    if not record:
-        raise HTTPException(status_code=404, detail="Record not found")
+    record = _get_record_or_404(db, record_id)
     db.delete(record)
     db.commit()
     return {"detail": "deleted"}

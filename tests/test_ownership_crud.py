@@ -1,15 +1,16 @@
+import pytest
 from fastapi.testclient import TestClient
 
 
 def test_create_record(client: TestClient, sample_record: dict) -> None:
     response = client.post("/api/v1/records", json=sample_record)
-    assert response.status_code == 201
+    assert response.status_code == 201, "should return 201 Created"
     data = response.json()
-    assert data["owner_name"] == "Ala"
-    assert data["animal_name"] == "kot"
-    assert data["since_date"] == "2024-10-31"
-    assert "id" in data
-    assert "created_at" in data
+    assert data["owner_name"] == "Ala", "owner_name should match input"
+    assert data["animal_name"] == "kot", "animal_name should match input"
+    assert data["since_date"] == "2024-10-31", "since_date should match input"
+    assert "id" in data, "response should include auto-generated id"
+    assert "created_at" in data, "response should include created_at timestamp"
 
 
 def test_create_record_whitespace_stripped(client: TestClient) -> None:
@@ -189,5 +190,73 @@ def test_delete_record_not_found(client: TestClient) -> None:
 
 def test_health_check(client: TestClient) -> None:
     response = client.get("/api/v1/health")
-    assert response.status_code == 200
-    assert response.json() == {"status": "healthy"}
+    assert response.status_code == 200, "health endpoint should return 200"
+    assert response.json() == {"status": "healthy"}, "should report healthy status"
+
+
+# --- Edge cases: pagination boundaries ---
+
+
+@pytest.mark.parametrize(
+    "params, expected_status",
+    [
+        ({"skip": -1}, 422),
+        ({"limit": 0}, 422),
+        ({"limit": 101}, 422),
+    ],
+    ids=["negative_skip", "zero_limit", "limit_over_max"],
+)
+def test_list_records_invalid_pagination(
+    client: TestClient, params: dict, expected_status: int
+) -> None:
+    response = client.get("/api/v1/records", params=params)
+    assert response.status_code == expected_status, (
+        f"params {params} should return {expected_status}"
+    )
+
+
+def test_list_records_limit_at_max(
+    client: TestClient, sample_record: dict
+) -> None:
+    client.post("/api/v1/records", json=sample_record)
+    response = client.get("/api/v1/records", params={"limit": 100})
+    assert response.status_code == 200, "limit=100 (boundary) should be accepted"
+
+
+def test_update_record_whitespace_stripped(
+    client: TestClient, sample_record: dict
+) -> None:
+    create_resp = client.post("/api/v1/records", json=sample_record)
+    record_id = create_resp.json()["id"]
+    response = client.put(
+        f"/api/v1/records/{record_id}", json={"owner_name": "  Bartek  "}
+    )
+    assert response.status_code == 200, "update should succeed"
+    assert response.json()["owner_name"] == "Bartek", (
+        "whitespace should be stripped on update"
+    )
+
+
+def test_update_record_whitespace_only_rejected(
+    client: TestClient, sample_record: dict
+) -> None:
+    create_resp = client.post("/api/v1/records", json=sample_record)
+    record_id = create_resp.json()["id"]
+    response = client.put(
+        f"/api/v1/records/{record_id}", json={"owner_name": "   "}
+    )
+    assert response.status_code == 422, (
+        "whitespace-only update should be rejected"
+    )
+
+
+def test_create_multiple_records_unique_ids(
+    client: TestClient, sample_record: dict
+) -> None:
+    ids = []
+    for i in range(3):
+        resp = client.post(
+            "/api/v1/records", json={**sample_record, "owner_name": f"Owner{i}"}
+        )
+        ids.append(resp.json()["id"])
+    assert len(set(ids)) == 3, "each record should have a unique id"
